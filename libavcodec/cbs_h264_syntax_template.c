@@ -256,7 +256,9 @@ static int FUNC(vui_parameters_default)(CodedBitstreamContext *ctx,
 
     return 0;
 }
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 static FILE* out_file_ptr = NULL;
 
 static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
@@ -268,15 +270,19 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
 
     CHECK(FUNC(nal_unit_header)(ctx, rw, &current->nal_unit_header,
                                 1 << H264_NAL_SPS));
-
-    ub(8, profile_idc);
-     
     if (!out_file_ptr)
     {
         out_file_ptr = fopen("sps.log", "wb+");
     }
-    
 
+    if (out_file_ptr)
+    {
+        fprintf(out_file_ptr, "====[profile_idc = %u][reserved_zero_2bits = %u][level_idc = %u][seq_parameter_set_id = %u]\n", current->profile_idc, current->reserved_zero_2bits, current->level_idc, current->seq_parameter_set_id);
+        fflush(out_file_ptr);
+    }
+    ub(8, profile_idc);
+     
+   
     /*
     #define ub(width, name) \
         xu(width, name, current->name, 0, MAX_UINT_BITS(width), 0, )
@@ -307,7 +313,7 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
     ue(seq_parameter_set_id, 0, 31);
     if (out_file_ptr)
     {
-        fprintf(out_file_ptr, "[profile_idc = %u][reserved_zero_2bits = %u][level_idc = %u][seq_parameter_set_id = %u]\n", profile_idc, reserved_zero_2bits, level_idc, seq_parameter_set_id);
+        fprintf(out_file_ptr, "[profile_idc = %u][reserved_zero_2bits = %u][level_idc = %u][seq_parameter_set_id = %u]\n", current->profile_idc, current->reserved_zero_2bits, current->level_idc, current->seq_parameter_set_id);
         fflush(out_file_ptr);
     }
     if (current->profile_idc == 100 || current->profile_idc == 110 ||
