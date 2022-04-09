@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -537,6 +537,7 @@ static int cbs_h2645_split_fragment(CodedBitstreamContext *ctx,
         bytestream2_skip(&gbc, 3);
         priv->nal_length_size = (bytestream2_get_byte(&gbc) & 3) + 1;
 
+        // TODO@chensong 解析sps 中type  5bit 哈
         // SPS array.
         count = bytestream2_get_byte(&gbc) & 0x1f;
         start = bytestream2_tell(&gbc);
@@ -709,10 +710,10 @@ static int cbs_h264_read_nal_unit(CodedBitstreamContext *ctx,
         return err;
 
     switch (unit->type) {
-    case H264_NAL_SPS:
+    case H264_NAL_SPS: // 16进制  67 --> [0110 0111]
         {
             H264RawSPS *sps = unit->content;
-
+            // 解析h264 的sps帧
             err = cbs_h264_read_sps(ctx, &gbc, sps);
             if (err < 0)
                 return err;
@@ -723,7 +724,7 @@ static int cbs_h264_read_nal_unit(CodedBitstreamContext *ctx,
         }
         break;
 
-    case H264_NAL_SPS_EXT:
+    case H264_NAL_SPS_EXT: // [xxx1 1111]
         {
             err = cbs_h264_read_sps_extension(ctx, &gbc, unit->content);
             if (err < 0)
@@ -731,7 +732,7 @@ static int cbs_h264_read_nal_unit(CodedBitstreamContext *ctx,
         }
         break;
 
-    case H264_NAL_PPS:
+    case H264_NAL_PPS:   // [xxx0 1111]
         {
             H264RawPPS *pps = unit->content;
 

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -257,6 +257,8 @@ static int FUNC(vui_parameters_default)(CodedBitstreamContext *ctx,
     return 0;
 }
 
+static FILE* out_file_ptr = NULL;
+
 static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
                      H264RawSPS *current)
 {
@@ -268,7 +270,29 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
                                 1 << H264_NAL_SPS));
 
     ub(8, profile_idc);
+     
+    if (!out_file_ptr)
+    {
+        out_file_ptr = fopen("sps.log", "wb+");
+    }
+    
 
+    /*
+    #define ub(width, name) \
+        xu(width, name, current->name, 0, MAX_UINT_BITS(width), 0, )
+
+    xu(8, profile_idc, current->profile_idc, 0, MAX_UINT_BITS(8) [0000011111111], 0, )
+
+    #define xu(width, name, var, range_min, range_max, subs, ...) do { \
+        uint32_t value; \
+        CHECK(ff_cbs_read_unsigned(ctx, rw, width, #name, \
+                                   SUBSCRIPTS(subs, __VA_ARGS__), \
+                                   &value, range_min, range_max)); \
+        var = value; \
+    } while (0)
+    */
+
+    //读取6个bit 
     flag(constraint_set0_flag);
     flag(constraint_set1_flag);
     flag(constraint_set2_flag);
@@ -281,7 +305,11 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
     ub(8, level_idc);
 
     ue(seq_parameter_set_id, 0, 31);
-
+    if (out_file_ptr)
+    {
+        fprintf(out_file_ptr, "[profile_idc = %u][reserved_zero_2bits = %u][level_idc = %u][seq_parameter_set_id = %u]\n", profile_idc, reserved_zero_2bits, level_idc, seq_parameter_set_id);
+        fflush(out_file_ptr);
+    }
     if (current->profile_idc == 100 || current->profile_idc == 110 ||
         current->profile_idc == 122 || current->profile_idc == 244 ||
         current->profile_idc ==  44 || current->profile_idc ==  83 ||

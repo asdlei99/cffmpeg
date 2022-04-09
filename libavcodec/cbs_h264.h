@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of FFmpeg.
  *
  * FFmpeg is free software; you can redistribute it and/or
@@ -102,7 +102,33 @@ typedef struct H264RawVUI {
 typedef struct H264RawSPS {
     H264RawNALUnitHeader nal_unit_header;
 
+
+    /*
+    标识当前H.264码流的profile。我们知道，H.264中定义了三种常用的档次profile：
+
+基准档次：baseline profile;
+
+主要档次：main profile;
+
+扩展档次：extended profile;
+
+在H.264的SPS中，第一个字节表示profile_idc，根据profile_idc的值可以确定码流符合哪一种档次。判断规律为：
+
+profile_idc = 66 → baseline profile;
+
+profile_idc = 77 → main profile;
+
+profile_idc = 88 → extended profile;
+
+在新版的标准中，还包括了High、High 10、High 4:2:2、High 4:4:4、High 10 Intra、High
+    */
     uint8_t profile_idc;
+
+
+    /*
+    constraint_set0_flag ~ constraint_set5_flag
+另外，constraint_set0_flag ~ constraint_set5_flag是在编码的档次方面对码流增加的其他一些额外限制性条件。
+    */
     uint8_t constraint_set0_flag;
     uint8_t constraint_set1_flag;
     uint8_t constraint_set2_flag;
@@ -110,8 +136,9 @@ typedef struct H264RawSPS {
     uint8_t constraint_set4_flag;
     uint8_t constraint_set5_flag;
     uint8_t reserved_zero_2bits;
+    // 标识当前码流的Level。编码的Level定义了某种条件下的最大视频分辨率、最大视频帧率等参数，码流所遵从的level由level_idc指定。
     uint8_t level_idc;
-
+    //表示当前的序列参数集的id。通过该id值，图像参数集pps可以引用其代表的sps中的参数。
     uint8_t seq_parameter_set_id;
 
     uint8_t chroma_format_idc;
@@ -125,8 +152,12 @@ typedef struct H264RawSPS {
     H264RawScalingList scaling_list_4x4[6];
     H264RawScalingList scaling_list_8x8[6];
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // 用于计算MaxFrameNum的值。计算公式为MaxFrameNum = 2^(log2_max_frame_num_minus4 +4)。MaxFrameNum是frame_num的上限值，frame_num是图像序号的一种表示方法，在帧间编码中常用作一种参考帧标记的手段 ??? 
     uint8_t log2_max_frame_num_minus4;
+    // 表示解码picture order count(POC)的方法。POC 是另一种计量图像序号的方式，与frame_num有着不同的计算方法。该语法元素的取值为 0、1 或 2
     uint8_t pic_order_cnt_type;
+
     uint8_t log2_max_pic_order_cnt_lsb_minus4;
     uint8_t delta_pic_order_always_zero_flag;
     int32_t offset_for_non_ref_pic;
@@ -135,11 +166,39 @@ typedef struct H264RawSPS {
     int32_t offset_for_ref_frame[256];
 
     uint8_t max_num_ref_frames;
+
+    // 标识位，说明frame_num中是否允许不连续的值。
     uint8_t gaps_in_frame_num_allowed_flag;
 
+    //////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    用于计算图像的宽度。单位为宏块个数，因此图像的实际宽度为:
+
+    公式： frame_width = 16 × (pic_width_in_mbs_minus1 + 1);
+    */
     uint16_t pic_width_in_mbs_minus1;
+    /*
+    使用PicHeightInMapUnits来度量视频中一帧图像的高度。PicHeightInMapUnits并非图像明确的以像素或宏块为单位的高度，而需要考虑该宏块是帧编码或场编码。PicHeightInMapUnits的计算方式为：
+
+PicHeightInMapUnits = pic_height_in_map_units_minus1 + 1;
+
+pic_height_in_map_units_minus1 为29 故高度为30   
+     计算公式： frame_height = 像素 * (pic_height_in_map_units_minus1 +1)
+    */
     uint16_t pic_height_in_map_units_minus1;
 
+    /// <summary>
+    /// ///////////////////////////////////////////////////////////////////
+    /*
+    标识位，说明宏块的编码方式。当该标识位为0时，宏块可能为帧编码或场编码；该标识位为1时，所有宏块都采用帧编码。根据该标识位取值不同，PicHeightInMapUnits的含义也不同，为0时表示一场数据按宏块计算的高度，为1时表示一帧数据按宏块计算的高度。
+
+    按照宏块计算的图像实际高度FrameHeightInMbs的计算方法为：
+
+    FrameHeightInMbs = ( 2 − frame_mbs_only_flag ) * PicHeightInMapUnits
+
+    故FRameHeightInMbs为30
+
+    */
     uint8_t frame_mbs_only_flag;
     uint8_t mb_adaptive_frame_field_flag;
     uint8_t direct_8x8_inference_flag;
