@@ -355,7 +355,14 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
         /*
         这边
          chroma_format_idc 是指如 6.2 节所提出的，与亮度取样对应的色度取样。chroma_format_idc 的值应该在 0
-到 3的范围内（包括 0和 3）。当 chroma_format_idc不存在时，应推断其值为 1（4：2：0的色度格式）。    
+到 3的范围内（包括 0和 3）。当 chroma_format_idc不存在时，应推断其值为 1（4：2：0的色度格式）。   
+
+表示YUV格式类型，
+
+chroma_format_idc=0，为YUV400，也就是没有UV分量
+chroma_format_idc=1，为YUV420
+chroma_format_idc=2，为YUV422
+chroma_format_idc=3，为YUV444
         */
         ue(chroma_format_idc, 0, 3);
 
@@ -431,7 +438,7 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
         ue(frame_crop_top_offset,    0, H264_MAX_HEIGHT);
         ue(frame_crop_bottom_offset, 0, H264_MAX_HEIGHT);
     }
-
+    // SPS 中含有 视频帧率(FPS)
     flag(vui_parameters_present_flag);
     if (current->vui_parameters_present_flag)
         CHECK(FUNC(vui_parameters)(ctx, rw, &current->vui, current));
