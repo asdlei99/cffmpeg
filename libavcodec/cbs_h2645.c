@@ -31,6 +31,21 @@
 #include "hevc_sei.h"
 
 
+
+
+
+/*
+TODO@chensong 2022-04-10 
+ 这个函数的作用 
+ value的数的多大
+
+ 流程：
+     一、先一次读取32bit
+            1. 如果中途遇到'1' 就停止，
+            2. 读取32bit都没有'1' 就是错误的信息
+
+     二 、有了上读取32bit的中途停止就说明value 在读取多少bit  是value的值
+*/
 static int cbs_read_ue_golomb(CodedBitstreamContext *ctx, GetBitContext *gbc,
                               const char *name, const int *subscripts,
                               uint32_t *write_to,
@@ -41,6 +56,7 @@ static int cbs_read_ue_golomb(CodedBitstreamContext *ctx, GetBitContext *gbc,
     unsigned int k;
     char bits[65];
 
+    // 1. 指针的开始位置
     position = get_bits_count(gbc);
 
     for (i = 0; i < 32; i++) {
@@ -60,9 +76,11 @@ static int cbs_read_ue_golomb(CodedBitstreamContext *ctx, GetBitContext *gbc,
         return AVERROR_INVALIDDATA;
     }
     value = 1;
+    // 这里没有什么就是字节转换为一个数
     for (j = 0; j < i; j++) {
         k = get_bits1(gbc);
         bits[i + j + 1] = k ? '1' : '0';
+        
         value = value << 1 | k;
     }
     bits[i + j + 1] = 0;

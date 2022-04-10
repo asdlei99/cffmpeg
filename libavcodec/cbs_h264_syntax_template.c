@@ -15,7 +15,9 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 static int FUNC(rbsp_trailing_bits)(CodedBitstreamContext *ctx, RWContext *rw)
 {
     int err;
@@ -256,10 +258,8 @@ static int FUNC(vui_parameters_default)(CodedBitstreamContext *ctx,
 
     return 0;
 }
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-static FILE* out_file_ptr = NULL;
+
+
 
 static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
                      H264RawSPS *current)
@@ -270,6 +270,7 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
 
     CHECK(FUNC(nal_unit_header)(ctx, rw, &current->nal_unit_header,
                                 1 << H264_NAL_SPS));
+    static FILE* out_file_ptr = NULL;
     if (!out_file_ptr)
     {
         out_file_ptr = fopen("sps.log", "wb+");
@@ -307,10 +308,37 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
     flag(constraint_set5_flag);
 
     u(2, reserved_zero_2bits,  0, 0);
+    /*
+#define u(width, name, range_min, range_max) \
+        xu(width, name, current->name, range_min, range_max, 0, )
+
+
+        xu(2, reserved_zero_2bits, current->reserved_zero_2bits, 0, 0, 0, )
+    */
+
+
 
     ub(8, level_idc);
 
     ue(seq_parameter_set_id, 0, 31);
+
+    /*
+
+#define ue(name, range_min, range_max) \
+        xue(name, current->name, range_min, range_max, 0, )
+
+ xue(seq_parameter_set_id, current->seq_parameter_set_id, 0, 31, 0, )
+
+    #define xue(name, var, range_min, range_max, subs, ...) do { \
+        uint32_t value = var; \
+        CHECK(cbs_write_ue_golomb(ctx, rw, #name, \
+                                  SUBSCRIPTS(subs, __VA_ARGS__), \
+                                  value, range_min, range_max)); \
+    } while (0)
+
+
+    */
+
     if (out_file_ptr)
     {
         fprintf(out_file_ptr, "[profile_idc = %u][reserved_zero_2bits = %u][level_idc = %u][seq_parameter_set_id = %u]\n", current->profile_idc, current->reserved_zero_2bits, current->level_idc, current->seq_parameter_set_id);
@@ -320,13 +348,23 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
         current->profile_idc == 122 || current->profile_idc == 244 ||
         current->profile_idc ==  44 || current->profile_idc ==  83 ||
         current->profile_idc ==  86 || current->profile_idc == 118 ||
-        current->profile_idc == 128 || current->profile_idc == 138) {
+        current->profile_idc == 128 || current->profile_idc == 138) 
+    {
+        /*
+        这边
+         chroma_format_idc 是指如 6.2 节所提出的，与亮度取样对应的色度取样。chroma_format_idc 的值应该在 0
+到 3的范围内（包括 0和 3）。当 chroma_format_idc不存在时，应推断其值为 1（4：2：0的色度格式）。    
+        */
         ue(chroma_format_idc, 0, 3);
 
         if (current->chroma_format_idc == 3)
+        {
             flag(separate_colour_plane_flag);
+        }
         else
+        {
             infer(separate_colour_plane_flag, 0);
+        }
 
         ue(bit_depth_luma_minus8,   0, 6);
         ue(bit_depth_chroma_minus8, 0, 6);

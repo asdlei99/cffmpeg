@@ -513,11 +513,19 @@ static inline unsigned int get_bits1(GetBitContext *s)
 #endif
 #else
     unsigned int index = s->index;
+    // 这里有一个定义就是  什么要 >> 是3 ->>> 它是一个字节8个比特位, 一个数组向右移动三个比特位就 大约定位到8个比特位上了， 再使用低三位定位到8个比特位中具体的的比特位上是不是好完美啊
     uint8_t result     = s->buffer[index >> 3];
 #ifdef BITSTREAM_READER_LE
     result >>= index & 7;
     result  &= 1;
 #else
+    // 取出低3bit 是正在位置的上的而数据 
+   //[0000 0000] [0100 0000]
+    // 例子：取出第9个bit
+    // setp 1:  9 >> 3; [1001] => [0001]
+    // [0100 0000]
+    // setp 2:  9 低三bit [1001] => [0001] // 
+    // [1000 0000] 
     result <<= index & 7;
     result >>= 8 - 1;
 #endif
