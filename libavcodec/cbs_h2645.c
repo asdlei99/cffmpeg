@@ -45,6 +45,9 @@ TODO@chensong 2022-04-10
             2. 读取32bit都没有'1' 就是错误的信息
 
      二 、有了上读取32bit的中途停止就说明value 在读取多少bit  是value的值
+
+        n 个 bit
+         公式：  value = (1>>n) + 下面的读取的数据  
 */
 static int cbs_read_ue_golomb(CodedBitstreamContext *ctx, GetBitContext *gbc,
                               const char *name, const int *subscripts,
@@ -75,6 +78,9 @@ static int cbs_read_ue_golomb(CodedBitstreamContext *ctx, GetBitContext *gbc,
                "%s: more than 31 zeroes.\n", name);
         return AVERROR_INVALIDDATA;
     }
+    // ======>>>>>>>无符号哥伦布编码值
+
+    // 非常细节的地方   就是 i这个值 要先看清楚是多少哈   我搞半天才对上
     value = 1;
     // 这里没有什么就是字节转换为一个数
     for (j = 0; j < i; j++) {

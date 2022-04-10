@@ -281,6 +281,8 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
         fprintf(out_file_ptr, "====[profile_idc = %u][reserved_zero_2bits = %u][level_idc = %u][seq_parameter_set_id = %u]\n", current->profile_idc, current->reserved_zero_2bits, current->level_idc, current->seq_parameter_set_id);
         fflush(out_file_ptr);
     }
+	// [64]
+	// profile_idc  byte 
     ub(8, profile_idc);
      
    
@@ -298,7 +300,7 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
         var = value; \
     } while (0)
     */
-
+	// 00 
     //读取6个bit 
     flag(constraint_set0_flag);
     flag(constraint_set1_flag);
@@ -317,7 +319,7 @@ static int FUNC(sps)(CodedBitstreamContext *ctx, RWContext *rw,
     */
 
 
-
+	// 1E 
     ub(8, level_idc);
 
     ue(seq_parameter_set_id, 0, 31);
