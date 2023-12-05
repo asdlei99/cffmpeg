@@ -1731,7 +1731,7 @@ int ff_rtsp_connect(AVFormatContext *s)
                                                       rt->rtp_port_min);
         return AVERROR(EINVAL);
     }
-
+    // TODO@chensong 20231205 winÉÏÍøÂç³õÊ¼»¯
     if (!ff_network_init())
         return AVERROR(EIO);
 
