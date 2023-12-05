@@ -1,0 +1,4 @@
+﻿E:\Work\media_server\cffmpeg\Samples\SamplesWin10\MediaPlayerCPP\MediaPlayerCPP.vcxproj : XamlCompiler error WMC1006: Cannot resolve Assembly or Windows Metadata file 'E:\Work\media_server\cffmpeg\Debug\FFmpegInterop\FFmpegInterop.winmd'
+  pch.cpp
+E:\Work\media_server\cffmpeg\Samples\SamplesWin10\MediaPlayerCPP\pch.cpp : fatal error C1192: “E:\Work\media_server\cffmpeg\Debug\FFmpegInterop\FFmpegInterop.winmd”
+          “系统找不到指定的文件。”上的 #using 失败
